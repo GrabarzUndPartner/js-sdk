@@ -174,13 +174,33 @@ function uploadFiles(db, bucket, files, cwd) {
   }
 }
 
+const UPLOAD_ATTEMPTS = 3;
+
 function uploadFile(db, bucket, filePath, cwd) {
   let fullFilePath = path.join(cwd, filePath);
 
   let stat = fs.statSync(fullFilePath);
 
   let file = new db.File({path: `/${bucket}/${filePath}`, data: fs.createReadStream(fullFilePath), size: stat.size, type: 'stream'});
-  return file.upload({ force: true }).catch(function(e) {
-    throw new Error(`Failed to upload file ${filePath}: ${e.message}`);
-  });
+
+  let uploadAttempts = UPLOAD_ATTEMPTS;
+  const fileUpload = () => file.upload({ force: true }).catch(function(e) {
+    if (e.code === 'ECONNRESET' && uploadAttempts > 0){
+      uploadAttempts--;
+      console.log('Retry upload (' + uploadAttempts + ' / ' + UPLOAD_ATTEMPTS + ')')
+      return timeout().then(fileUpload);
+    } else {
+      throw new Error(`Failed to upload file ${filePath}: ${e.message}`);
+    }
+  })
+
+  return fileUpload();
 }
+
+const UPLOAD_RETRY_TIMEUOT = 500;
+function timeout(){
+  return new Promise(resolve => {
+    global.setTimeout(resolve, UPLOAD_RETRY_TIMEUOT)
+  })
+}
+
