@@ -198,6 +198,8 @@ function uploadFile(db, bucket, filePath, cwd) {
       if (e.code === 'ECONNRESET' && uploadAttempts > 0){
         console.log('Retry upload (' + i + ' / ' + UPLOAD_ATTEMPTS + ')');
         return timeout().then(() => file.upload({ force: true }));
+      } else {
+        return Promise.reject(e);
       }
     });
   }
