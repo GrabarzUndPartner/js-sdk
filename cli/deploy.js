@@ -195,9 +195,10 @@ function uploadFile(db, bucket, filePath, cwd) {
   for (let i = 0; i < UPLOAD_ATTEMPTS; i++) {
     // highlight-next-line
     promise = promise.catch((e) => {
-      console.log(e.message);
-      console.log('Retry upload (' + i + ' / ' + UPLOAD_ATTEMPTS + ')');
-      return timeout().then(() => file.upload({ force: true }));
+      if (e.code === 'ECONNRESET' && uploadAttempts > 0){
+        console.log('Retry upload (' + i + ' / ' + UPLOAD_ATTEMPTS + ')');
+        return timeout().then(() => file.upload({ force: true }));
+      }
     });
   }
   promise.catch((e) => {
