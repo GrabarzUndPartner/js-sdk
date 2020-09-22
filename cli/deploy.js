@@ -191,7 +191,7 @@ function uploadFile(db, bucket, filePath, cwd) {
 
   let file = new db.File({path: `/${bucket}/${filePath}`, data: fs.createReadStream(fullFilePath), size: stat.size, type: 'stream'});
 
-  let promise = Promise.reject();
+  let promise = file.upload({ force: true });
   for (let i = 0; i < UPLOAD_ATTEMPTS; i++) {
     // highlight-next-line
     promise = promise.catch(() => {
