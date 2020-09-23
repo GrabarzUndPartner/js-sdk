@@ -198,7 +198,7 @@ function uploadFile(db, bucket, filePath, cwd) {
       console.log(e)
       if (e.cause.code === 'ECONNRESET'){
         console.log('Retry upload (' + (i + 1) + ' / ' + UPLOAD_ATTEMPTS + ')');
-        return timeout().then(() => file.upload({ force: true }));
+        return file.upload({ force: true });
       } else {
         return Promise.reject(e);
       }
